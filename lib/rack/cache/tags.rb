@@ -8,6 +8,7 @@ require 'rack/cache/tags/context'
 require 'rack/cache/tags/storage'
 require 'rack/cache/tags/tag_store'
 require 'rack/cache/tags/meta_store'
+require 'rack/cache/tags/purger'
 
 module Rack::Cache
   TAGS_HEADER       = 'X-Cache-Tags'
@@ -20,6 +21,10 @@ module Rack::Cache
       uri = options['rack-cache.tagstore']
       storage.resolve_tagstore_uri(uri)
     end
+  end
+
+  Purge::Purger.class_eval do
+    include Tags::Purger
   end
 
   module Tags

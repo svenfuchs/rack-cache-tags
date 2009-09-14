@@ -1,6 +1,7 @@
 # test setup largely stolen from Ryan Tomayko's rack-cache
 
 require 'pp'
+require 'fileutils'
 
 begin
   require 'test/spec'
@@ -10,14 +11,16 @@ rescue LoadError => boom
 end
 
 # Setup the load path ..
-$: << File.dirname(File.dirname(__FILE__)) + '/../rack-cache/lib'
-$: << File.dirname(File.dirname(__FILE__)) + '/../rack-cache-purge/lib'
-$: << File.dirname(File.dirname(__FILE__)) + '/lib'
-$: << File.dirname(__FILE__)
+$: << File.expand_path(File.dirname(__FILE__) + '/../../rack-cache/lib')
+$: << File.expand_path(File.dirname(__FILE__) + '/../../rack-cache-purge/lib')
+$: << File.expand_path(File.dirname(__FILE__) + '/../lib')
+$: << File.expand_path(File.dirname(__FILE__))
 
 require 'rack/cache'
 require 'rack/cache/purge'
 require 'rack/cache/tags'
+
+TMP_DIR = File.expand_path(File.dirname(__FILE__) + '/tmp')
 
 # Methods for constructing downstream applications / response
 # generators.
@@ -26,28 +29,18 @@ module CacheContextHelpers
 
   def setup_cache_context
     # holds each Rack::Cache::Context
-    @app = nil
-
-    # each time a request is made, a clone of @cache_template is used
-    # and appended to @caches.
-    @cache_template = nil
-    @cache = nil
-    @caches = []
+    @app, @cache, @called, @request, @response, @cache_config = nil
     @errors = StringIO.new
-    @cache_config = nil
-
-    @called = false
-    @request = nil
-    @response = nil
-    @responses = []
-
     @storage = Rack::Cache::Storage.instance
   end
 
   def teardown_cache_context
-    @app, @cache_template, @cache, @caches, @called,
-    @request, @response, @responses, @cache_config = nil
+    FileUtils.rm_r(TMP_DIR) rescue Errno::ENOENT
     @storage.clear
+  end
+
+  def cache_config(&cache_config)
+    @cache_config = cache_config
   end
 
   # A basic response with 200 status code and a tiny body.
@@ -61,12 +54,8 @@ module CacheContextHelpers
       response.finish
     end
     @app.meta_def(:called?) { called }
-    @app.meta_def(:reset!) { called = false }
+    @app.meta_def(:reset!)  { called = false }
     @app
-  end
-
-  def cache_config(&block)
-    @cache_config = block
   end
 
   def request(method, uri = '/', env = {})
@@ -81,8 +70,6 @@ module CacheContextHelpers
     env = { 'rack.run_once' => true }.merge(env)
 
     @response = @request.request(method.to_s.upcase, uri, env)
-    @responses << @response
-    @response
   end
 
   def get(stem, env={}, &b)

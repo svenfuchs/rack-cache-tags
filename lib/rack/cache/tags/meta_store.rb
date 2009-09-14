@@ -1,13 +1,13 @@
-Rack::Cache::MetaStore::Heap.class_eval do
+module Rack::Cache::Tags::MetaStore
   def store(request, response, entity_store)
     key = super
 
     tags = response.headers[Rack::Cache::TAGS_HEADER]
     tagstore(request).store(key, tags) if tags
-    
+
     key
   end
-  
+
   def tagstore(request)
     uri = request.env['rack-cache.tagstore']
     storage.resolve_tagstore_uri(uri)
@@ -16,4 +16,7 @@ Rack::Cache::MetaStore::Heap.class_eval do
   def storage
     Rack::Cache::Storage.instance
   end
+
+  Rack::Cache::MetaStore::Heap.send(:include, self)
+  Rack::Cache::MetaStore::Disk.send(:include, self)
 end
