@@ -1,41 +1,50 @@
-require 'uri'
+require 'rack/request'
 
-require 'rack/cache'
-require 'rack/cache/storage'
-require 'rack/cache/utils'
+module Rack
+  module Cache
+    class Tags
+      autoload :Store, 'rack/cache/tags/store'
 
-require 'rack/cache/tags/context'
-require 'rack/cache/tags/storage'
-require 'rack/cache/tags/tag_store'
-require 'rack/cache/tags/meta_store'
-require 'rack/cache/tags/purger'
+      class << self
+        def store
+          @store ||= Store::ActiveRecord.new
+        end
 
-module Rack::Cache
-  TAGS_HEADER       = 'X-Cache-Tags'
-  PURGE_TAGS_HEADER = 'X-Cache-Purge-Tags'
-
-  Context.class_eval do
-    option_accessor :tagstore
-
-    def tagstore
-      uri = options['rack-cache.tagstore']
-      storage.resolve_tagstore_uri(uri)
-    end
-  end
-
-  Purge::Purger.class_eval do
-    include Tags::Purger
-  end
-
-  module Tags
-    class << self
-      def new(backend, options={}, &b)
-        Context.new(backend, options, &b)
+        def store=(store)
+          @store ||= store
+        end
       end
 
-      def normalize(tags)
-        Array(tags).join(',').split(',').map { |tag| tag.strip }
+      TAGS_HEADER       = 'rack-cache.tags'
+      PURGE_HEADER      = 'rack-cache.purge'
+      PURGE_TAGS_HEADER = 'rack-cache.purge-tags'
+      
+      attr_reader :app
+
+      def initialize(app)
+        @app = app
       end
+
+      def call(env)
+        status, headers, body = app.call(env)
+        if status == 200
+          store(Rack::Request.new(env).url, headers[TAGS_HEADER]) if headers.key?(TAGS_HEADER)
+          purge(headers) if headers.key?(PURGE_TAGS_HEADER)
+        end
+        [status, headers, body]
+      end
+
+      protected
+      
+        def store(*args)
+          self.class.store.store(*args)
+        end
+        
+        def purge(headers)
+          urls = self.class.store.purge(headers[PURGE_TAGS_HEADER])
+          headers[PURGE_HEADER] = urls unless urls.empty?
+          headers.delete(PURGE_TAGS_HEADER)
+        end
     end
   end
 end
