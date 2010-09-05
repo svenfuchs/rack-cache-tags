@@ -12,12 +12,17 @@ module Rack
           def store(url, tags)
             tags.each { |tag| Tagging.find_or_create_by_url_and_tag(url, tag) }
           end
-          
+
           def purge(tags)
-            tags = Tagging.where(:tag => tags)
-            urls = tags.map(&:url)
-            Tagging.where(:url => urls).delete_all
-            urls
+            urls_by_tags(tags).tap { |urls| Tagging.where(:url => urls).delete_all }
+          end
+
+          def urls_by_tags(tags)
+            taggings_by_tags(tags).map(&:url)
+          end
+
+          def taggings_by_tags(tags)
+            Tagging.where((['tag LIKE ?'] * tags.size).join(' OR '), *tags.map { |tag| "#{tag}%" })
           end
         end
       end
