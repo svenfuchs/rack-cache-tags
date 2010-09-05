@@ -29,11 +29,31 @@ end
 DatabaseCleaner.strategy = :truncation
 
 class Test::Unit::TestCase
+  include Rack::Cache::Tags::Store
+
   def setup
     DatabaseCleaner.start
   end
 
   def teardown
     DatabaseCleaner.clean
+  end
+
+  attr_reader :app
+
+  def create_tags(url, tags)
+    tags.each { |tag| ActiveRecord::Tagging.create!(:url => url, :tag => tag) }
+  end
+
+  def respond_with(status, headers, body)
+    @app = Rack::Cache::Tags.new(lambda { |env| [200, headers, ''] })
+  end
+
+  def get(url)
+    app.call(env_for(url))
+  end
+
+  def env_for(*args)
+    Rack::MockRequest.env_for(*args)
   end
 end
