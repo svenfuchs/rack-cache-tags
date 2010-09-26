@@ -27,10 +27,8 @@ module Rack
 
       def call(env)
         status, headers, body = app.call(env)
-        if status == 200
-          store(Rack::Request.new(env).url, headers[TAGS_HEADER]) if headers.key?(TAGS_HEADER)
-          purge(headers) if headers.key?(PURGE_TAGS_HEADER)
-        end
+        store(Rack::Request.new(env).url, headers[TAGS_HEADER]) if status == 200 && headers.key?(TAGS_HEADER)
+        purge(headers) if headers.key?(PURGE_TAGS_HEADER)
         [status, headers, body]
       end
 
