@@ -27,7 +27,7 @@ class TagsTest < Test::Unit::TestCase
 
     actual = ActiveRecord::Tagging.all.map { |tagging| [tagging.url, tagging.tag] }
     assert_equal [%w(http://example.com/baz baz-1)], actual
-    assert_equal %w(http://example.com/foo http://example.com/bar), headers[Rack::Cache::Tags::PURGE_HEADER]
+    assert_equal %w(http://example.com/foo http://example.com/bar), headers[Rack::Cache::Purge::PURGE_HEADER]
   end
 
   test 'active_record store finds tags w/o methods' do

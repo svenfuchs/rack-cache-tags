@@ -1,4 +1,5 @@
 require 'rack/request'
+require 'rack/cache/purge'
 
 module Rack
   module Cache
@@ -15,10 +16,9 @@ module Rack
         end
       end
 
-      TAGS_HEADER       = 'rack-cache.tags'
-      PURGE_HEADER      = 'rack-cache.purge'
       PURGE_TAGS_HEADER = 'rack-cache.purge-tags'
-      
+      TAGS_HEADER       = 'rack-cache.tags'
+
       attr_reader :app
 
       def initialize(app)
@@ -40,7 +40,7 @@ module Rack
 
         def purge(headers)
           urls = self.class.store.purge(headers[PURGE_TAGS_HEADER])
-          headers[PURGE_HEADER] = urls unless urls.empty?
+          headers[Purge::PURGE_HEADER] = urls unless urls.empty?
         end
     end
   end
