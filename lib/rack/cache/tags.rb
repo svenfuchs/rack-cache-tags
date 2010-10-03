@@ -33,15 +33,14 @@ module Rack
       end
 
       protected
-      
+
         def store(*args)
           self.class.store.store(*args)
         end
-        
+
         def purge(headers)
           urls = self.class.store.purge(headers[PURGE_TAGS_HEADER])
           headers[PURGE_HEADER] = urls unless urls.empty?
-          headers.delete(PURGE_TAGS_HEADER)
         end
     end
   end
