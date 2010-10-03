@@ -22,7 +22,8 @@ module Rack
           end
 
           def taggings_by_tags(tags)
-            Tagging.where((['tag LIKE ?'] * tags.size).join(' OR '), *tags.map { |tag| "#{tag}%" })
+            sql = "tag IN (?) #{[' OR tag LIKE ?'] * tags.size}"
+            Tagging.where(sql, tags, *tags.map { |tag| "#{tag.split(':').first}%" })
           end
         end
       end
