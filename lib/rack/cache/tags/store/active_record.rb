@@ -18,7 +18,7 @@ module Rack
           end
 
           def urls_by_tags(tags)
-            taggings_by_tags(tags).map(&:url)
+            taggings_by_tags(tags).map(&:url).uniq
           end
 
           def taggings_by_tags(tags)
