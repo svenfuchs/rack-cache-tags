@@ -15,7 +15,6 @@ log = '/tmp/rack_cache_tags.log'
 FileUtils.touch(log) unless File.exists?(log)
 
 ActiveRecord::Base.logger = Logger.new(log)
-ActiveRecord::LogSubscriber.attach_to(:active_record)
 ActiveRecord::Base.establish_connection(:adapter => 'sqlite3', :database => ':memory:')
 ActiveRecord::Migration.verbose = false
 

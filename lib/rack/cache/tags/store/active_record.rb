@@ -10,7 +10,8 @@ module Rack
           end
 
           def store(url, tags)
-            tags.each { |tag| Tagging.find_or_create_by_url_and_tag(url, tag) }
+            tags -= taggings_by_url_and_tags(url, tags).map(&:tag)
+            tags.each { |tag| Tagging.create(:url => url, :tag => tag) }
           end
 
           def purge(tags)
@@ -24,6 +25,10 @@ module Rack
           def taggings_by_tags(tags)
             sql = "tag IN (?) #{[' OR tag LIKE ?'] * tags.size}"
             Tagging.where(sql, tags, *tags.map { |tag| "#{tag.split(':').first}%" })
+          end
+
+          def taggings_by_url_and_tags(url, tags)
+            Tagging.where("url = ? AND tag IN (?)", url, tags)
           end
         end
       end
