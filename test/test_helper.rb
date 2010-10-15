@@ -2,13 +2,14 @@ $:.unshift File.expand_path('../../lib', __FILE__)
 
 require 'rubygems'
 require 'test/unit'
-require 'test_declarative'
 require 'fileutils'
-require 'active_record'
 require 'logger'
+require 'bundler/setup'
+
+require 'test_declarative'
+require 'active_record'
 require 'rack/mock'
 require 'database_cleaner'
-
 require 'rack_cache_tags'
 
 log = '/tmp/rack_cache_tags.log'

@@ -16,4 +16,12 @@ Gem::Specification.new do |s|
   s.platform     = Gem::Platform::RUBY
   s.require_path = 'lib'
   s.rubyforge_project = '[none]'
+
+  s.add_dependency 'rack-cache-purge'
+
+  s.add_development_dependency 'test_declarative'
+  s.add_development_dependency 'rack'
+  s.add_development_dependency 'activerecord'
+  s.add_development_dependency 'sqlite3-ruby'
+  s.add_development_dependency 'database_cleaner'
 end
